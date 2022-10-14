@@ -893,6 +893,7 @@ int GenerateOpenGLHeader(GLSettings* Settings)
       fprintf(Output, Generated, Settings->WriteTimestamp);
 
       Generated =
+        "// Define GLGEN_IMPLEMENTATION in one cpp file and #include this file. Other files can include this directly.\n\n"
         "typedef struct %sOpenGLVersion\n"
         "{\n"
         "  int Major;\n"
@@ -917,7 +918,11 @@ int GenerateOpenGLHeader(GLSettings* Settings)
 
       Generated =
         "#ifndef APIENTRY\n"
+        "#if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(__MINGW32__)\n"
+        "#define APIENTRY __stdcall\n"
+        "#else\n"
         "#define APIENTRY\n"
+        "#endif\n"
         "#endif\n"
         "#ifndef APIENTRYP\n"
         "#define APIENTRYP APIENTRY *\n"
@@ -1004,6 +1009,15 @@ int GenerateOpenGLHeader(GLSettings* Settings)
         }
 
         fwrite(Spacer, strlen(Spacer), 1, Output);
+        Generated =
+            "#if defined(GLGEN_IMPLEMENTATION)\n"
+            "#define GLGEN_EXPORT\n"
+            "#else\n"
+            "#define GLGEN_EXPORT extern\n"
+            "#endif\n";
+        fprintf(Output, "%s", Generated);
+        fwrite(Spacer, strlen(Spacer), 1, Output);
+
         for (unsigned int Index = 0; Index < FunctionCount; ++Index)
         {
           GLToken* Token = FunctionsHash + Index;
@@ -1013,16 +1027,17 @@ int GenerateOpenGLHeader(GLSettings* Settings)
             char Name[512];
             UpperCase(Name, ArbToken->FunctionName);
             char Buffer[512];
-            int Length = sprintf_s(Buffer, sizeof(Buffer), "PFN%sPROC %s%" PRI_STR ";\n", Name, ProcPrefix,
+            int Length = sprintf_s(Buffer, sizeof(Buffer), "GLGEN_EXPORT PFN%sPROC %s%" PRI_STR ";\n", Name, ProcPrefix,
                                  ArbToken->FunctionName.Length, ArbToken->FunctionName.Chars);
 
             fwrite(Buffer, (size_t)Length, 1, Output);
           }
         }
 
+        fwrite(Spacer, strlen(Spacer), 1, Output);
         Generated =
-          "\n\n"
           "typedef void (*%sOpenGLProc)(void);\n\n"
+          "#if defined(GLGEN_IMPLEMENTATION)\n"
           "#ifdef _WIN32\n"
           "static HMODULE %sOpenGLHandle;\n"
           "static void %sLoadOpenGL()\n"
@@ -1104,7 +1119,7 @@ int GenerateOpenGLHeader(GLSettings* Settings)
                 Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix,
                 Prefix, Prefix, Prefix, Prefix, Prefix, Prefix, Prefix);
         Generated =
-          "\n\nvoid %sOpenGLInit(%sOpenGLVersion* Version)\n"
+          "\nvoid %sOpenGLInit(%sOpenGLVersion* Version)\n"
           "{\n"
           "  %sLoadOpenGL();\n\n";
         fprintf(Output, Generated, Prefix, Prefix, Prefix);
@@ -1135,7 +1150,8 @@ int GenerateOpenGLHeader(GLSettings* Settings)
           "    glGetIntegerv(GL_MAJOR_VERSION, &Version->Major);\n"
           "    glGetIntegerv(GL_MINOR_VERSION, &Version->Minor);\n"
           "  }\n"
-          "}\n\n"
+          "}\n"
+          "#endif\n\n"
           "#endif // INCLUDE_OPENGL_GENERATED_H\n";
         fprintf(Output, Generated, Prefix);
       }
