@@ -26,6 +26,18 @@ optional arguments:
   -no-b                Don't generate the OpenGL loading boilerplate code
 ```
 
+Define `GLGEN_IMPLEMENTATION` and include the generated header file in ONE cpp file to compile in the code and data. Other files
+should include the generated header file directly without defining `GLGEN_IMPLEMENTATION`:
+
+``` cpp
+// In one cpp file
+#define GLGEN_IMPLEMENTATION
+#include "my_gl.h"
+
+// In another cpp file
+#include "my_gl.h"
+```
+
 The generated boilerplate code that initializes OpenGL can be used like so:
 
 
