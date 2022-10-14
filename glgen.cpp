@@ -642,7 +642,8 @@ int TokenComparer(const void* A, const void* B)
 char* ReadEntireFile(char* Filename)
 {
   char* Result = 0;
-  FILE* File = fopen(Filename, "r");
+  FILE* File;
+  fopen_s(&File, Filename, "r");
   if (File)
   {
     fseek(File, 0, SEEK_END);
@@ -674,7 +675,8 @@ char* ReadMultiFiles(char* Start, char* End)
   while(Start < End)
   {
     char* Filename = Start;
-    FILE* File = fopen(Filename, "r");
+    FILE* File;
+    fopen_s(&File, Filename, "r");
     if (File)
     {
       fseek(File, 0, SEEK_END);
@@ -783,7 +785,8 @@ static
 int GenerateOpenGLHeader(GLSettings* Settings)
 {
   char* ArbData = ReadMultiFiles(Settings->HeadersStart, Settings->HeadersEnd);
-  FILE* Output = fopen(Settings->Output, "w");
+  FILE* Output;
+  fopen_s(&Output, Settings->Output, "w");
   const char* ProcPrefix = "GEN_";
   int Success = -1;
 
@@ -968,7 +971,7 @@ int GenerateOpenGLHeader(GLSettings* Settings)
           char Name[512];
           UpperCase(Name, ArbToken->FunctionName);
           char Buffer[512];
-          int Length = sprintf(Buffer, "typedef %" PRI_STR " (APIENTRYP PFN%sPROC) %" PRI_STR "\n",
+          int Length = sprintf_s(Buffer, sizeof(Buffer), "typedef %" PRI_STR " (APIENTRYP PFN%sPROC) %" PRI_STR "\n",
                                ArbToken->ReturnType.Length, ArbToken->ReturnType.Chars,
                                Name,
                                ArbToken->Parameters.Length, ArbToken->Parameters.Chars);
@@ -986,7 +989,7 @@ int GenerateOpenGLHeader(GLSettings* Settings)
           if (ArbToken)
           {
             char Buffer[512];
-            int Length = sprintf(Buffer, "#define %" PRI_STR " %s%" PRI_STR "\n",
+            int Length = sprintf_s(Buffer, sizeof(Buffer), "#define %" PRI_STR " %s%" PRI_STR "\n",
                                  ArbToken->FunctionName.Length, ArbToken->FunctionName.Chars,
                                  ProcPrefix,
                                  ArbToken->FunctionName.Length, ArbToken->FunctionName.Chars);
@@ -1006,7 +1009,7 @@ int GenerateOpenGLHeader(GLSettings* Settings)
             char Name[512];
             UpperCase(Name, ArbToken->FunctionName);
             char Buffer[512];
-            int Length = sprintf(Buffer, "PFN%sPROC %s%" PRI_STR ";\n", Name, ProcPrefix,
+            int Length = sprintf_s(Buffer, sizeof(Buffer), "PFN%sPROC %s%" PRI_STR ";\n", Name, ProcPrefix,
                                  ArbToken->FunctionName.Length, ArbToken->FunctionName.Chars);
 
             fwrite(Buffer, (size_t)Length, 1, Output);
@@ -1110,7 +1113,7 @@ int GenerateOpenGLHeader(GLSettings* Settings)
             char Name[512];
             UpperCase(Name, ArbToken->FunctionName);
             char Buffer[512];
-            int Length = sprintf(Buffer, "  %s%" PRI_STR " = (PFN%sPROC)%sOpenGLGetProc(\"%" PRI_STR "\");\n",
+            int Length = sprintf_s(Buffer, sizeof(Buffer), "  %s%" PRI_STR " = (PFN%sPROC)%sOpenGLGetProc(\"%" PRI_STR "\");\n",
                                  ProcPrefix,
                                  ArbToken->FunctionName.Length, ArbToken->FunctionName.Chars,
                                  Name, Prefix, ArbToken->FunctionName.Length, ArbToken->FunctionName.Chars);
