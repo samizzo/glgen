@@ -104,6 +104,10 @@ int main(int argc, char** argv)
       {
         Result = GenerateOpenGLHeader(&Settings);
       }
+      else
+      {
+        printf("Output file is already up-to-date!\n");
+      }
     }
     else
     {
